@@ -1,9 +1,9 @@
 {
-  "name": "Real Prices AirBnB",
-  "version": "0.0.1",
+  "name": "Airbnb Real Prices",
+  "version": "1.0.0",
   "manifest_version": 2,
-  "description": "This extension was created with the awesome extensionizr.com",
-  "homepage_url": "http://extensionizr.com",
+  "description": "Hover over the 'per day/month/year' text on the property listing to get the total price with all modifiers.",
+  "homepage_url": "https://www.ferreira.si",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",

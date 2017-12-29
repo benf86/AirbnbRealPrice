@@ -5,40 +5,39 @@ chrome.extension.sendMessage({}, function(response) {
 
 		// ----------------------------------------------------------
 		// This part of the script triggers when page is done loading
-		console.log("Hello. This message was sent from scripts/inject.js");
+		console.log("Airbnb Real Prices extension loaded. Mouse-over the 'per day/month' part to update it. Limit is 1 / second so you don't get banned.");
 
-		var targetNode = document.getElementsByTagName('body')[0];
-		var config = { attributes: true, childList: true };
-
-		var observer = new MutationObserver(updateListing);
-
-		observer.observe(targetNode, config);
-
-		function updateListing() {
-			getActualPrice(search);
-		}
-
-		var search = {
-			guests: 1,
-			listing_id: '12579291',
+		var searchDefaults = {
 			format: 'for_web_with_date',
-			check_in: '2018-01-07',
-			check_out: '2018-01-09',
-			adults: '1',
-			children: '0',
-			infants: '0',
-			apiKey: 'd306zoyjsyarp7ifhu67rjxn52tv0t20',
+			apiKey: JSON.parse($('meta[content*="api_config"]').attr('content')).api_config.key,
 			currency: 'EUR'
 		}
 
+		function parseQueryParams() {
+			return window.location.href
+				.split('?')[1]
+				.split('&')
+				.reduce(function (cur, next) {
+					let mySplit = next.split('=');
+					cur[mySplit[0]] = mySplit[1];
+					return cur;
+				}, searchDefaults);
+		}
+
+
+
+		function updateListing(listingId) {
+			return !listingId
+			? null
+			: getActualPrice(Object.assign({}, parseQueryParams(), { listing_id: listingId }));
+		}
 
 		function getActualPrice(searchData) {
 			let parentListingDivEl = $(`#listing-${searchData.listing_id}`);
-			console.log(parentListingDivEl);
 			var settings = {
 				"async": true,
 				"crossDomain": true,
-				"url": `https://www.airbnb.com/api/v2/pdp_listing_booking_details?guests=${search.guests}&listing_id=${search.listing_id}&_format=${search.format}&check_in=${search.check_in}&check_out=${search.check_out}&number_of_adults=${search.adults}&number_of_children=${search.children}&number_of_infants=${search.infants}&key=${search.apiKey}&currency=${search.currency}`,
+				"url": `https://www.airbnb.com/api/v2/pdp_listing_booking_details?guests=${searchData.adults + searchData.children}&listing_id=${searchData.listing_id}&_format=${searchData.format}&check_in=${searchData.checkin}&check_out=${searchData.checkout}&number_of_adults=${searchData.adults}&number_of_children=${searchData.children}&number_of_infants=${searchData.infants}&key=${searchData.apiKey}&currency=${searchData.currency}`,
 				"method": "GET",
 				"headers": {
 					"cache-control": "no-cache"
@@ -53,12 +52,34 @@ chrome.extension.sendMessage({}, function(response) {
 		}
 
 		function updateActualPrice(parentListingDivEl, actualPrice) {
-			console.log($(parentListingDivEl).find('span:contains("Per")'));
 			window.blabla = parentListingDivEl;
 			$($(parentListingDivEl)
 				.find('span:contains("Per")')[3])
 				.text(function (i, old) { return `${old} (Total: ${actualPrice})`; });
 		}
+
+		function setListener() {
+			$('body').mouseover(function handleEvent (event) {
+				if (~['per night', 'per day', 'per month', 'per year'].indexOf(event.target.textContent.toLowerCase())) {
+					let i = 0;
+					let el = event.target;
+
+					while (!~el.id.indexOf('listing') && i < 100) {
+						el = el.parentElement
+						i += 1;
+					}
+					console.log(`Updating: ${el.id}`);
+					updateListing(el.id.split('-')[1]);
+
+					$('body').off('mouseover', handleEvent);
+					setTimeout(function () {
+						setListener();
+					}, 1000);
+				}
+			});
+		}
+
+		setListener();
 		// ----------------------------------------------------------
 
 	}
