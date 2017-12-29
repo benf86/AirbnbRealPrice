@@ -1,6 +1,6 @@
 {
   "name": "Airbnb Real Prices",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "manifest_version": 2,
   "description": "Hover over the 'per day/month/year' text on the property listing to get the total price with all modifiers.",
   "homepage_url": "https://www.ferreira.si",

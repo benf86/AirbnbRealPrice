@@ -9,7 +9,12 @@ chrome.extension.sendMessage({}, function(response) {
 
 		var searchDefaults = {
 			format: 'for_web_with_date',
-			apiKey: JSON.parse($('meta[content*="api_config"]').attr('content')).api_config.key
+			apiKey: JSON.parse($('meta[content*="api_config"]').attr('content')).api_config.key,
+			checkin: new Date(Date.now() + 3600 * 24 * 1000).toISOString().split('T')[0],
+			checkout: new Date(Date.now() + 2 * 3600 * 24 * 1000).toISOString().split('T')[0],
+			adults: "1",
+			children: "0",
+			infants: "0"
 		}
 
 		function parseQueryParams() {
