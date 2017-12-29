@@ -9,8 +9,7 @@ chrome.extension.sendMessage({}, function(response) {
 
 		var searchDefaults = {
 			format: 'for_web_with_date',
-			apiKey: JSON.parse($('meta[content*="api_config"]').attr('content')).api_config.key,
-			currency: 'EUR'
+			apiKey: JSON.parse($('meta[content*="api_config"]').attr('content')).api_config.key
 		}
 
 		function parseQueryParams() {
@@ -29,7 +28,10 @@ chrome.extension.sendMessage({}, function(response) {
 		function updateListing(listingId) {
 			return !listingId
 			? null
-			: getActualPrice(Object.assign({}, parseQueryParams(), { listing_id: listingId }));
+				: getActualPrice(Object.assign({}, parseQueryParams(), {
+					listing_id: listingId,
+					currency: $('#currency-selector').val()
+				}));
 		}
 
 		function getActualPrice(searchData) {
@@ -46,16 +48,18 @@ chrome.extension.sendMessage({}, function(response) {
 
 			$.ajax(settings)
 			.done(function (response) {
-				let actualPrice = response.pdp_listing_booking_details[0].price.total.amount_formatted;
-				updateActualPrice(parentListingDivEl, actualPrice);
+				let formattedPrice = response.pdp_listing_booking_details[0].price.total.amount_formatted;
+				let actualPrice = response.pdp_listing_booking_details[0].price.total.amount;
+				let nights = response.pdp_listing_booking_details[0].nights;
+				updateActualPrice(parentListingDivEl, formattedPrice, actualPrice, nights);
 			});
 		}
 
-		function updateActualPrice(parentListingDivEl, actualPrice) {
-			window.blabla = parentListingDivEl;
+		function updateActualPrice(parentListingDivEl, formattedPrice, actualPrice, nights) {
+			var perNight = Math.ceil(+actualPrice / +nights);
 			$($(parentListingDivEl)
 				.find('span:contains("Per")')[3])
-				.text(function (i, old) { return `${old} (Total: ${actualPrice})`; });
+				.text(function (i, old) { return `${old} (Total: ${formattedPrice} = ${perNight} per night)`; });
 		}
 
 		function setListener() {
